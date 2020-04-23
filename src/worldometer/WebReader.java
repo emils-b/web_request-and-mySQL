@@ -6,7 +6,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 public class WebReader {
-	
+
 	static Document getPage(String urlString) {
 		Document doc = null;
 		pause(350);
@@ -19,81 +19,110 @@ public class WebReader {
 		}
 		return doc;
 	}
-	
-	
-	static void getStatTable(String urlString) {
+
+	/*
+	 * NAV LABS RISINĀJUMS ĪSTI
+	 */
+	static void getCovStatTable(String urlString) {
 		Document doc = getPage(urlString);
 		Element allTable = doc.getElementById("main_table_countries_today");
 		Elements tableRows = allTable.getElementsByTag("tr");
-		int i = 0;
+		int countryNameIndex = 0;
+		int totalCovCasesIndex = 1;
+		int totalCovDeathIndex = 3;
+		int totalCovRecoveredIndex = 5;
+		int totalCovTestsMadeIndex = 10;
 		for (Element row : tableRows) {
-			if (i <= 8) { 
-			i++;
-			continue;
-			}
 			Elements rowsCells = row.getElementsByTag("td");
-			getCountryName(rowsCells, 0);
-			getCountryHref(rowsCells, 0);
-			getTotalCases(rowsCells, 1);
-			getTotalDeath(rowsCells, 3);
-			getTotalRecovered(rowsCells, 5);
-			getTotalTests(rowsCells, 10);
-			//CountryData country = new CountryData();
-			i++;
+			if (rowsCells.size() < 10 || getStringData(rowsCells, countryNameIndex).contentEquals("")
+					|| getCountryHref(rowsCells).contentEquals("")) {
+				continue;
+			}
+			CountryCovidData countryCovDat = new CountryCovidData(getStringData(rowsCells, countryNameIndex),
+					getIntData(rowsCells, totalCovCasesIndex), getIntData(rowsCells, totalCovDeathIndex),
+					getIntData(rowsCells, totalCovRecoveredIndex), getIntData(rowsCells, totalCovTestsMadeIndex),
+					getCountryHref(rowsCells));
 		}
 	}
-	
-	static String getCountryName(Elements rowsCells, int index) {
+
+	static void getCountryStatTable(String urlString) {
+		Document doc = getPage(urlString);
+		Element allTable = doc.getElementById("example2");
+		Elements tableRows = allTable.getElementsByTag("tr");
+		int countryNameIndex = 1;
+		int populationIndex = 2;
+		int densityIndex = 5;
+		int landAreaIndex = 6;
+		int medianAgeIndex = 9;
+		int urbanPopIndex = 10;
+		for (Element row : tableRows) {
+			Elements rowsCells = row.getElementsByTag("td");
+			if (rowsCells.size() < 10) {
+				continue;
+			}
+			String name = getStringData(rowsCells, countryNameIndex);
+			if (Main.countryList.contains(name)) {
+				CountryData country = new CountryData(name, getIntData(rowsCells, populationIndex),
+						getIntData(rowsCells, densityIndex), getIntData(rowsCells, landAreaIndex),
+						getIntData(rowsCells, medianAgeIndex), getIntData(rowsCells, urbanPopIndex));
+			}
+		}
+	}
+
+	static String getStringData(Elements rowsCells, int index) {
 		String countryName;
-		if (!isValidString(rowsCells, index)) countryName = "";
+		if (!isValidString(rowsCells, index))
+			countryName = "";
 		else {
 			countryName = rowsCells.get(index).text();
 		}
-		System.out.println(countryName);
 		return countryName;
 	}
-	
-	static String getCountryHref(Elements rowsCells, int index) {
-		String countryHref = rowsCells.get(index).getElementsByTag("a").attr("href");
-		System.out.println(countryHref);
+
+	static String getCountryHref(Elements rowsCells) {
+		String countryHref;
+		int index = 0;
+		if (!isValidString(rowsCells, index))
+			countryHref = "";
+		else {
+			countryHref = rowsCells.get(index).getElementsByTag("a").attr("href");
+		}
 		return countryHref;
 	}
-	
-	static int getTotalCases(Elements rowsCells, int index) {
-		int totalCases = Integer.parseInt(rowsCells.get(index).text().replace(",", ""));
-		System.out.println("cases "+totalCases);
+
+	static int getIntData(Elements rowsCells, int index) {
+		int totalCases;
+		if (!isValidString(rowsCells, index))
+			totalCases = 0;
+		else if (rowsCells.get(index).text().contains("%")) {
+			totalCases = getIntFromCellWithPercent(rowsCells, index);
+		} else {
+			totalCases = getIntFromCell(rowsCells, index);
+		}
 		return totalCases;
 	}
-	
-	static int getTotalDeath(Elements rowsCells, int index) {
-		int totalDeath = Integer.parseInt(rowsCells.get(index).text().replace(",", ""));
-		System.out.println("dead "+totalDeath);
-		return totalDeath;
+
+	static int getIntFromCell(Elements rowsCells, int index) {
+		return Integer.parseInt(rowsCells.get(index).text().replace(",", ""));
 	}
-	
-	static int getTotalRecovered(Elements rowsCells, int index) {
-		int totalRecovered = Integer.parseInt(rowsCells.get(index).text().replace(",", ""));
-		System.out.println("recovered "+totalRecovered);
-		return totalRecovered;
+
+	static int getIntFromCellWithPercent(Elements rowsCells, int index) {
+		return Integer.parseInt(rowsCells.get(index).text().replace(" %", ""));
 	}
-	
-	static int getTotalTests(Elements rowsCells, int index) {
-		int totalTests = Integer.parseInt(rowsCells.get(index).text().replace(",", ""));
-		System.out.println("tests "+totalTests);
-		return totalTests;
-	}
-	
+
 	static boolean isValidString(Elements rowsCells, int index) {
 		boolean isValidString = true;
-		if (rowsCells.get(index).text().contentEquals("N//N")) isValidString=false;
+		String row = rowsCells.get(index).text();
+		if (row.contentEquals("N/A") || row.contentEquals("N.A.") || row.contentEquals(""))
+			isValidString = false;
 		return isValidString;
 	}
-	
+
 	static void pause(int millis) {
 		try {
 			Thread.sleep(millis);
 		} catch (Exception e) {
-			
+
 		}
 	}
 
