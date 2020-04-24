@@ -1,6 +1,8 @@
 package worldometer;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Main {
 	
@@ -9,11 +11,20 @@ public class Main {
 	public static void main(String[] args) {
 		String covUrlString = "https://www.worldometers.info/coronavirus/";
 		String countryUrlString = "https://www.worldometers.info/world-population/population-by-country/";
+		
 		WebReader.getCovStatTable(covUrlString);
 		WebReader.getCountryStatTable(countryUrlString);
 		
-		System.out.println(CountryCovidData.countryCount + "____"+CountryData.countryCount);
+		
+		DB db = new DB();
+		
+		db.saveCovidData(CountryCovidData.countryCovList);
+		db.saveCountryData(CountryData.countryDataList);
 
+		
+		/*for (String c:countryList) {
+			System.out.println(CountryCovidData.countryCovList.get(c).countryName +"______"+CountryData.countryDataList.get(c).countryName);
+		}*/
 	}
 
 }

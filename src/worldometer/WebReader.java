@@ -31,17 +31,20 @@ public class WebReader {
 		int totalCovCasesIndex = 1;
 		int totalCovDeathIndex = 3;
 		int totalCovRecoveredIndex = 5;
+		int totalCovCasesOnOneMilIndex = 8;
 		int totalCovTestsMadeIndex = 10;
 		for (Element row : tableRows) {
 			Elements rowsCells = row.getElementsByTag("td");
 			if (rowsCells.size() < 10 || getStringData(rowsCells, countryNameIndex).contentEquals("")
-					|| getCountryHref(rowsCells).contentEquals("")) {
+					|| getCountryHref(rowsCells).contentEquals("")
+					|| getStringData(rowsCells, countryNameIndex).contentEquals("Vatican City")) {
 				continue;
 			}
 			CountryCovidData countryCovDat = new CountryCovidData(getStringData(rowsCells, countryNameIndex),
 					getIntData(rowsCells, totalCovCasesIndex), getIntData(rowsCells, totalCovDeathIndex),
 					getIntData(rowsCells, totalCovRecoveredIndex), getIntData(rowsCells, totalCovTestsMadeIndex),
-					getCountryHref(rowsCells));
+					getDoubleData(rowsCells, totalCovCasesOnOneMilIndex), getCountryHref(rowsCells));
+			//System.out.println(getStringData(rowsCells, countryNameIndex)+": "+getDoubleData(rowsCells, totalCovCasesOnOneMilIndex));
 		}
 	}
 
@@ -65,6 +68,7 @@ public class WebReader {
 				CountryData country = new CountryData(name, getIntData(rowsCells, populationIndex),
 						getIntData(rowsCells, densityIndex), getIntData(rowsCells, landAreaIndex),
 						getIntData(rowsCells, medianAgeIndex), getIntData(rowsCells, urbanPopIndex));
+				CountryCovidData.countryCovList.get(name).countryData = country;
 			}
 		}
 	}
@@ -101,7 +105,21 @@ public class WebReader {
 		}
 		return totalCases;
 	}
-
+	
+	static double getDoubleData(Elements rowsCells, int index) {
+		double totalCases;
+		if (!isValidString(rowsCells, index))
+			totalCases = 0;
+		else {
+			totalCases = getDoubleFromCell(rowsCells, index);
+		}
+		return totalCases;
+	}
+	
+	static double getDoubleFromCell(Elements rowsCells, int index) {
+		return Double.parseDouble(rowsCells.get(index).text().replace(",", ""));
+	}
+	
 	static int getIntFromCell(Elements rowsCells, int index) {
 		return Integer.parseInt(rowsCells.get(index).text().replace(",", ""));
 	}
