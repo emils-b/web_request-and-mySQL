@@ -20,6 +20,7 @@ public class Main {
 		
 		db.saveCovidData(CountryCovidData.countryCovList);
 		db.saveCountryData(CountryData.countryDataList);
+		db.saveCountryDataWithForeignKey(CountryData.countryDataList);
 
 		
 		/*for (String c:countryList) {
