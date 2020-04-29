@@ -25,7 +25,7 @@ public class DB {
 	//dataRelationQuery makes no sense here, its only for concept. Will use foreign keys instead
 	public void saveCovidData(Map<String, CountryCovidData> data) {
 		String query = "INSERT IGNORE INTO tbl_CountryCovidData (`countryName`, `totalCases`, `totalDeath`, `totalRecovered`, `totalTests`, `countryHref`, `totalCasesOnOneMil`) values ";
-		String dataRelationQuery = "INSERT INTO rel_countrydata_coviddata (`country_data_name`, `covid_data_name`) values ";
+		String dataRelationQuery = "INSERT IGNORE INTO rel_countrydata_coviddata (`country_data_name`, `covid_data_name`) values ";
 		for (String country : Main.countryList) {
 			CountryCovidData countryOb = data.get(country);
 			String part = "('" + countryOb.countryName.replace("'", "\\\'") + "'," + countryOb.totalCases + ", "
@@ -86,12 +86,47 @@ public class DB {
 
 	public void insert(String insertQuery) {
 		try {
-			// String query = "INSERT IGNORE INTO tbl_CountryCovidData(`countryName`,
-			// `totalCases`, `totalDeath`, `totalRecovered`, `totalTests`, `countryHref`,
-			// `totalCasesOnOneMil`) values ('test',1,2,3,4,'test2',5)";
 			stat.executeUpdate(insertQuery);
 		} catch (Exception e) {
 			System.err.println("problems with insert: " + insertQuery);
+			e.printStackTrace();
+		}
+	}
+	
+	public void readCovidData() {
+		try {
+			String query = "select * from tbl_countrycoviddata";
+			this.rs = stat.executeQuery(query);
+			while (rs.next()) {
+				//int id = rs.getInt("id");
+				String name = rs.getString("countryName");
+				System.out.println(name);
+			}
+		} catch (Exception e) {
+			System.err.println("Problem with select");
+			e.printStackTrace();
+		}
+	}
+	
+	//just for concept. gets each object from its name in DB
+	public void readCovidCountryRelations(Map<String, CountryCovidData> countryCovList, Map<String, CountryData> countryDataList) {
+		try {
+			String query = "select * from rel_countrydata_coviddata";
+			this.rs = stat.executeQuery(query);
+			while (rs.next()) {
+				//int id = rs.getInt("id");
+				String covidCountryName = rs.getString("covid_data_name");
+				String countryName = rs.getString("country_data_name");
+				CountryCovidData covDat = countryCovList.get(covidCountryName);
+				CountryData countryDat = countryDataList.get(countryName);
+				if (covDat==null || countryDat==null) {
+					System.err.println("Problem with country realltion on "+covidCountryName+" and "+countryName);
+				}
+				System.out.println(covDat.countryName+ " and "+countryDat.countryName);
+				//System.out.println(name);
+			}
+		} catch (Exception e) {
+			System.err.println("Problem with select");
 			e.printStackTrace();
 		}
 	}
